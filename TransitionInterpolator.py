@@ -57,60 +57,105 @@ class TransitionEditor:
         self.transitions = []
         self.blanks = []
 
-        self.transition_frame = tk.Frame(root)
-        self.transition_frame.config(bg=blackColor)
-        self.transition_frame.pack(fill="both", expand=True)
+        self.scrollFrame = tk.Frame(root)
+        self.scrollFrame.columnconfigure(index=0, weight=1)
+        self.scrollFrame.rowconfigure(index=0, weight=1)
+        self.scrollFrame.pack(fill="both", expand=True)
 
-        self.button_frame = tk.Frame(self.transition_frame)
-        self.button_frame.config(bg=greyColor)
-        self.button_frame.pack(fill="x")
+        self.scrollCanvas = tk.Canvas(self.scrollFrame)
+        self.scrollCanvas.grid(row=0, column=0, sticky="nsew")
 
-        self.add_transition_button = tk.Button(self.button_frame, text="Add Interpolation", command=self.add_transition, background=navyColor, foreground=whiteColor)
+        self.scrollY = ttk.Scrollbar(self.scrollFrame, orient="vertical", command=self.scrollCanvas.yview)
+        self.scrollY.grid(row=0, column=1, sticky="ns")
+
+        self.scrollX = ttk.Scrollbar(self.scrollFrame, orient="horizontal", command=self.scrollCanvas.xview)
+        self.scrollX.grid(row=1, column=0, sticky="ew")
+
+        self.scrollCanvas.configure(yscrollcommand=self.scrollY.set, xscrollcommand=self.scrollX.set, bg=navyColor)
+        self.scrollCanvas.bind_all("<Configure>", self.updateScrollRegion)
+        self.scrollCanvas.bind_all("<MouseWheel>", self.mouseScrollY)
+        self.scrollCanvas.bind_all("<Shift - MouseWheel>", self.mouseScrollX)
+
+        self.transition_frame = tk.Frame(self.scrollCanvas, bg="black")
+        self.transition_frame.pack(side="top", fill="both")
+        self.window = self.scrollCanvas.create_window((0, 0), window=self.transition_frame, anchor="nw")
+
+        self.button_frame = tk.Frame(self.transition_frame, bg=greyColor)
+        self.button_frame.grid(sticky="ew", row=0, column=0)
+
+        span = 1
+
+        self.transitionButtonsFrame = tk.Frame(self.button_frame, bg=greyColor)
+        self.transitionButtonsFrame.grid(padx=10, row=3, column=0, sticky="W", columnspan=span)
+
+        self.add_transition_button = tk.Button(self.transitionButtonsFrame, text="Add Interpolation", command=self.add_transition, background=navyColor, foreground=whiteColor)
         self.add_transition_button.pack(pady=10, padx=10, side="left")
-        self.remove_transition_button = tk.Button(self.button_frame, text="Remove Interpolation", command=self.remove_transition, background=navyColor, foreground=whiteColor)
+        self.remove_transition_button = tk.Button(self.transitionButtonsFrame, text="Remove Interpolation", command=self.remove_transition, background=navyColor, foreground=whiteColor)
         self.remove_transition_button.pack(pady=10, padx=10, side="left")
 
-        self.framesLabel = ttk.Label(self.button_frame, text="Last Frame:", background=navyColor, foreground=whiteColor)
-        self.framesLabel.pack(pady=10, padx=10, side="left")
+        self.constantsFrame = tk.Frame(self.button_frame, bg=greyColor)
+        self.constantsFrame.grid(padx=10, row=1, column=0, sticky="E", columnspan=span)
 
-        valid1 = self.button_frame.register(validate_int_10k)
-        self.frames = tk.StringVar(value="10")
-        self.framesEntry = ttk.Entry(self.button_frame, width=6, background=greyColor, foreground=blackColor, textvariable=self.frames, validate="key", validatecommand=(valid1, '%P'))
-        self.framesEntry.pack(side="left", padx=5)
-
-        self.constantsLabel = ttk.Label(self.button_frame, text="Constants:", background=navyColor,foreground=whiteColor)
+        self.constantsLabel = ttk.Label(self.constantsFrame, text="Constants:", background=navyColor,foreground=whiteColor)
         self.constantsLabel.pack(pady=10, padx=10, side="left")
-        self.constantsEntry = ttk.Entry(self.button_frame, width=50, background=greyColor, foreground=blackColor)
-        self.constantsEntry.pack(side="left", padx=5)
+        self.constantsEntry = ttk.Entry(self.constantsFrame, width=120, background=greyColor, foreground=blackColor)
+        self.constantsEntry.pack(padx=5, side="left")
 
-        self.negConstantsLabel = ttk.Label(self.button_frame, text="Constant Negatives:", background=navyColor,
+        self.negConstantsFrame = tk.Frame(self.button_frame, bg=greyColor)
+        self.negConstantsFrame.grid(padx=10, row=2, column=0, sticky="E", columnspan=span)
+
+        self.negConstantsLabel = ttk.Label(self.negConstantsFrame, text="Constant Negatives:", background=navyColor,
                                         foreground=whiteColor)
         self.negConstantsLabel.pack(pady=10, padx=10, side="left")
-        self.negConstantsEntry = ttk.Entry(self.button_frame, width=20, background=greyColor, foreground=blackColor)
-        self.negConstantsEntry.pack(side="left", padx=5)
+        self.negConstantsEntry = ttk.Entry(self.negConstantsFrame, width=120, background=greyColor, foreground=blackColor)
+        self.negConstantsEntry.pack(padx=5, side="left")
 
-        self.runningLabel = ttk.Label(self.button_frame, text="Ready", background=navyColor,
-                                       foreground=goldColor)
-        self.runningLabel.pack(pady=5, padx=5, side="right")
+        self.runFrame = tk.Frame(self.button_frame, bg=greyColor)
+        self.runFrame.grid(padx=10, row=0, column=0, sticky="W", columnspan=span)
 
-        self.run_button = tk.Button(self.button_frame, text="Create File",
-                                                  command=self.create_file, background=navyColor,
-                                                  foreground=whiteColor)
-        self.run_button.pack(pady=10, padx=10, side="right")
+        self.framesLabel = ttk.Label(self.runFrame, text="Last Frame:", background=navyColor,
+                                     foreground=whiteColor)
+        self.framesLabel.pack(padx=5, side="left")
 
-        validTxt = self.button_frame.register(validate_end_txt)
-        self.file = tk.StringVar(value="out.txt")
-        self.fileName = ttk.Entry(self.button_frame, width=16, background=greyColor, foreground=blackColor, textvariable=self.file, validate="key", validatecommand=(validTxt, '%P'))
-        self.fileName.pack(side="right", padx=5)
+        valid1 = self.runFrame.register(validate_int_10k)
+        self.frames = tk.StringVar(value="10")
+        self.framesEntry = ttk.Entry(self.runFrame, width=6, background=greyColor, foreground=blackColor,
+                                     textvariable=self.frames, validate="key", validatecommand=(valid1, '%P'))
+        self.framesEntry.pack(padx=5, side="left")
 
-        self.fileNameLabel = ttk.Label(self.button_frame, text="Output File Name:", background=navyColor,
+        self.fileNameLabel = ttk.Label(self.runFrame, text="Output File Name:", background=navyColor,
                                        foreground=whiteColor)
-        self.fileNameLabel.pack(pady=10, padx=10, side="right")
+        self.fileNameLabel.pack(pady=10, padx=10, side="left")
+
+        validTxt = self.runFrame.register(validate_end_txt)
+        self.file = tk.StringVar(value="out.txt")
+        self.fileName = ttk.Entry(self.runFrame, width=16, background=greyColor, foreground=blackColor,
+                                  textvariable=self.file, validate="key", validatecommand=(validTxt, '%P'))
+        self.fileName.pack(padx=5, side="left")
+
+        self.run_button = tk.Button(self.runFrame, text="Create File",
+                                    command=self.create_file, background=navyColor,
+                                    foreground=whiteColor)
+        self.run_button.pack(pady=10, padx=10, side="left")
+
+        self.runningLabel = ttk.Label(self.runFrame, text="Ready", background=navyColor,
+                                       foreground=goldColor)
+        self.runningLabel.pack(pady=5, padx=5, side="left")
 
         #This pre-opens up some of the UI
-        blankFrame = BlankFrame(self.transition_frame)
-        self.blanks.append(blankFrame)
-        self.add_transition()
+        #blankFrame = BlankFrame(self.transition_frame, 0)
+        #self.blanks.append(blankFrame)
+        #self.add_transition()
+
+    def updateScrollRegion(self, event):
+        self.scrollCanvas.update_idletasks()
+        self.scrollCanvas.configure(scrollregion=self.scrollCanvas.bbox("all"))
+
+    def mouseScrollY(self, event):
+        self.scrollCanvas.yview_scroll(int(-1*(event.delta/120)), "units")
+
+    def mouseScrollX(self, event):
+        self.scrollCanvas.xview_scroll(int(-1*(event.delta/120)), "units")
 
     def create_file(self):
         f = open(self.fileName.get(), "w+")
@@ -199,8 +244,8 @@ class TransitionEditor:
         transition = Transition(self.transition_frame, len(self.transitions) + 1)
         transition.add_keyframe()
         transition.add_keyframe()
+        blankFrame = BlankFrame(self.transition_frame, len(self.transitions) + 1)
         self.transitions.append(transition)
-        blankFrame = BlankFrame(self.transition_frame)
         self.blanks.append(blankFrame)
 
     def remove_transition(self):
@@ -214,15 +259,11 @@ class TransitionEditor:
         blankFrame.blank_frame.destroy()
 
 class BlankFrame:
-    def __init__(self, parent_frame):
+    def __init__(self, parent_frame, num):
         self.parent_frame = parent_frame
 
-        self.blank_frame = tk.Frame(parent_frame, padx=-1, pady=-1)
-        self.blank_frame.config(bg=blackColor)
-        self.blank_frame.pack(fill="x")
-
-        self.transition_label = ttk.Label(self.blank_frame, text="", font="Verdana 1", background=blackColor, foreground=blackColor)
-        self.transition_label.pack(side="left", padx=0)
+        self.blank_frame = tk.Frame(parent_frame, height=4, bg=blackColor)
+        self.blank_frame.grid(sticky="ew",row=num * 2 + 2, column=0)
 
 class Transition:
     def __init__(self, parent_frame, num):
@@ -230,33 +271,39 @@ class Transition:
         self.keyframes = []
         self.exponents = []
 
-        self.transition_frame = tk.Frame(parent_frame, padx=8, pady=8)
-        self.transition_frame.config(bg=navyColor)
-        self.transition_frame.pack(fill="x")
+        self.transition_frame = tk.Frame(parent_frame, padx=8, pady=8, bg=navyColor)
+        self.transition_frame.grid(sticky="w",row=num * 2 + 1, column=0)
 
-        self.transition_label = ttk.Label(self.transition_frame, text="Interpolation #" + str(num) + ": ", font="Verdana 8 bold", background=navyColor, foreground=whiteColor)
-        self.transition_label.pack(side="left", padx=5)
+        self.transition_buttons_frame = tk.Frame(self.transition_frame, padx=8, pady=8, bg=navyColor)
+        self.transition_buttons_frame.grid(row = 0, column=0, sticky="N")
+
+        self.transition_label = ttk.Label(self.transition_buttons_frame, text="Interpolation #" + str(num) + ": ", font="Verdana 8 bold", background=navyColor, foreground=whiteColor)
+        self.transition_label.grid(row=0, column=0, padx=5)
 
         self.negative = tk.BooleanVar(value=False)
-        self.negative_checkbox = tk.Checkbutton(self.transition_frame, text="Negative?", background=greyColor,
+        self.negative_checkbox = tk.Checkbutton(self.transition_buttons_frame, text="Negative?", background=greyColor,
                                                 foreground=checkColor, variable=self.negative)
-        self.negative_checkbox.pack(side="left", padx=5)
+        self.negative_checkbox.grid(row=1, column=0, padx=5)
 
-        self.remove_keyframe_button = tk.Button(self.transition_frame, text="Remove Keyframe",
+        self.keyframes_frame = tk.Frame(self.transition_frame, padx=8, pady=8, bg=navyColor)
+        self.keyframes_frame.grid(row = 0, column=1, sticky="N")
+
+        self.add_keyframe_button = tk.Button(self.transition_buttons_frame, text="Add Keyframe",
+                                             command=self.add_keyframe, background=navyColor, foreground=whiteColor)
+        self.add_keyframe_button.grid(row=3, column=0, padx=5)
+        self.remove_keyframe_button = tk.Button(self.transition_buttons_frame, text="Remove Keyframe",
                                                 command=self.remove_keyframe, background=navyColor,
                                                 foreground=whiteColor)
-        self.remove_keyframe_button.pack(side="right", padx=5)
-        self.add_keyframe_button = tk.Button(self.transition_frame, text="Add Keyframe", command=self.add_keyframe, background=navyColor, foreground=whiteColor)
-        self.add_keyframe_button.pack(side="right", padx=5)
+        self.remove_keyframe_button.grid(row=4, column=0, padx=5)
+
 
     def add_keyframe(self):
         keys = len(self.keyframes)
         if keys > 0:
-            exponent = Exponent(self.transition_frame, keys)
+            exponent = Exponent(self.keyframes_frame, keys)
             self.exponents.append(exponent)
-        keyframe = Keyframe(self.transition_frame, keys+1)
+        keyframe = Keyframe(self.keyframes_frame, keys+1)
         self.keyframes.append(keyframe)
-
     def remove_keyframe(self):
         keys = len(self.keyframes)
         if keys <= 0:
@@ -273,8 +320,7 @@ class Keyframe:
     def __init__(self, parent_frame, num):
         self.parent_frame = parent_frame
 
-        self.keyframe_frame = tk.Frame(parent_frame, padx=4, pady=4)
-        self.keyframe_frame.config(bg=greyColor)
+        self.keyframe_frame = tk.Frame(parent_frame, padx=4, pady=4, bg=greyColor)
         self.keyframe_frame.pack(fill="x")
 
         self.keyframe_label = ttk.Label(self.keyframe_frame, text="Keyframe #" + str(num) + ": ", font="Verdana 8 bold", background=navyColor, foreground=whiteColor)
@@ -282,7 +328,7 @@ class Keyframe:
 
         self.prompt_label = ttk.Label(self.keyframe_frame, text="Prompt:", background=navyColor, foreground=whiteColor)
         self.prompt_label.pack(side="left", padx=5)
-        self.prompt_entry = ttk.Entry(self.keyframe_frame, width=100, background=navyColor, foreground=blackColor)
+        self.prompt_entry = ttk.Entry(self.keyframe_frame, width=120, background=navyColor, foreground=blackColor)
         self.prompt_entry.pack(side="left", padx=5)
 
         self.weight = tk.StringVar(value="1")
@@ -303,8 +349,7 @@ class Exponent:
     def __init__(self, parent_frame, num):
         self.parent_frame = parent_frame
 
-        self.exponent_frame = tk.Frame(parent_frame, padx=2, pady=2)
-        self.exponent_frame.config(bg=navyColor)
+        self.exponent_frame = tk.Frame(parent_frame, padx=2, pady=2, bg=navyColor)
         self.exponent_frame.pack(fill="x")
 
         self.exponent_label = ttk.Label(self.exponent_frame, text="\tTransition #" + str(num) + ": ", font="Verdana 8 bold", background=navyColor, foreground=whiteColor)
@@ -323,5 +368,10 @@ class Exponent:
 
 if __name__ == "__main__":
     root = tk.Tk()
+    screen_width = root.winfo_screenwidth()
+    screen_height = root.winfo_screenheight()
+    widthOffset = 0
+    heightOffset = 0
+    root.geometry("{}x{}+{}+{}".format(screen_width - 2*widthOffset, screen_height - 80 - 2*heightOffset, widthOffset-10, heightOffset))
     app = TransitionEditor(root)
     root.mainloop()
