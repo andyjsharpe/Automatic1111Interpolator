@@ -8,6 +8,14 @@ If you wish to modify the code, it should be self-explanatory. Tkinter is used f
 
 I am not sure how much I plan to improve on this script, so feel free to fork this repo and make any modifications you want. If you have any feature requests or problems feel free to put them in the issues tab, though I cannot guarantee I will be able to get to them.
 
+## Tips:
+- Manually setting a seed makes the transitions seem more natural, though it may also make images seem too similar from a composition perspective.
+- Try to only have a few terms in a single keyframe as blending will become unstable, if you are getting to 6 terms it is time to split some of them off into a separate interpolation.
+- Super high weights often give strange results, if you are struggling to add a feature it is often more productive to either search for what is blocking it than to increase its weight.
+- On the frame which a keyframe occurs there may often be a "jump" in the continuity of the transition, a good way to fix this is to do your own blending inside the prompt with the format {value1 | value2}. The Use Step Interpolation option may also help here.
+- Some checkpoints are better at creating images with blended values, once you have the .txt file created be sure to try it with different checkpoints and settings.
+- Since diffusion tries to predict the average when creating an image, blending is affected both by likelihood and the other prompt values. For example, the sky is normally blue, so transitioning between a blue and green sky will likely only give green values when very close to the green sky keyframe.
+
 ## Global Settings:
 The top bar of the UI contains important settings that effect the rest of the UI:
 - The "Add/Remove Interpolations" buttons add and remove interpolations
