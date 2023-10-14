@@ -2,7 +2,7 @@
 
 This is a script intended to be used to interpolate between multiple prompts in order to creare an image sequence using Automatic 1111. This script outputs a .txt file which Automatic 1111 can read using the "Prompts from file or textbox" script to create a sequance of images.
 
-This script is purely designed to produce sets of positve and negative prompts. In this vein the Checkpoint, Step Count, Refiner, Styles, Sampling Method, etc... all have to be configured in the Automatic 1111 UI. This makes it so that an output can be easily reused with different Checkpoints and settings easily.
+This script is purely designed to produce sets of positve and negative prompts. In this vein the Checkpoint, Step Count, Refiner, Styles, Sampling Method, and all other diffusion settings have to be configured in the Automatic 1111 UI. This makes it so that an output can be easily reused with different Checkpoints and settings easily.
 
 If you wish to modify the code it should be pretty self-explanitory. Tkinter is used for the UI but everything else is just normal built-in Python.
 
@@ -31,8 +31,8 @@ Each "Keyframe: represents a prompt at a set point in time. Multiple keyframes w
 Between every pair of keyframes there will be a transition which is used to decide how they are interpolated
 - The "Exponent" decides the shape of the interpolation:
   - 1 is Linear. This usaily gives good results, but you may want to change it is the "intersting" parts of the transition are not being given enough frames in theoutput images.
-  - > 1 is a s-curve that spends more time on the ends of the interpolation, this is best used if a lot of changes occur near the ends or if the middle of the transition is "boring".
-  - < 1 is an inversed s-curve that spends more time on the middle of the interpolation, this is best used if the ends do not have many changes, or if the middle is the most interesting part of the transition.
+  - Values greater then 1 makes an s-curve that spends more time on the ends of the interpolation, this is best used if a lot of changes occur near the ends or if the middle of the transition is "boring".
+  - Values less then 1 makes an inverted s-curve that spends more time on the middle of the interpolation, this is best used if the ends do not have many changes, or if the middle is the most interesting part of the transition.
 - The "Use Step Interpolation?" checkbox changes the mode of how the interpolation is done:
   - Normally prompt values are blended based on their weights and frames, then that resulting blended prompt is applied over all diffusion steps, this usially works quite well and is the default.
   - In some cases there is no satasfactory blend between two prompts, usially occuring when they are very different and of different types, in that case it may be better to use one prompt for some steps, and then use the second prompt for the rest. Checking the box will turn on this mode for the transition, though be aware that this often "skews" the timing of the transition, so the exponent may not have the same effect as before.
