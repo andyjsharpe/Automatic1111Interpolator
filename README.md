@@ -2,7 +2,7 @@
 
 This is a script intended to be used to interpolate between multiple prompts to create an image sequence using Automatic 1111. This script outputs a .txt file which Automatic 1111 can read using the "Prompts from file or textbox" script to create a sequence of images.
 
-<img src=Example/frame0.png width="128"><img src=Example/frame1.png width="128"><img src=Example/frame2.png width="128"><img src=Example/frame3.png width="128"><img src=Example/frame4.png width="128"><img src=Example/frame5.png width="128"><img src=Example/frame6.png width="128">
+<img src=Example/frame0.png width="96"><img src=Example/frame1.png width="96"><img src=Example/frame2.png width="96"><img src=Example/frame3.png width="96"><img src=Example/frame4.png width="96"><img src=Example/frame5.png width="96"><img src=Example/frame6.png width="96">
 
 This script is purely designed to produce sets of positive and negative prompts. In this vein the Checkpoint, Step Count, Refiner, Styles, Sampling Method, and all other diffusion settings must be configured in the Automatic 1111 UI. This makes it so that an output can be easily reused with different Checkpoints and settings easily.
 
