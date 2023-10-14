@@ -52,7 +52,7 @@ Between every pair of keyframes there will be a transition which is used to deci
   - 1 is Linear. This usually gives good results, but you may want to change it is the "interesting" parts of the transition are not being given enough frames in the output images.
   - Values greater than 1 makes an s-curve that spends more time on the ends of the interpolation, this is best used if a lot of changes occur near the ends or if the middle of the transition is "boring".
   - Values less than 1 makes an inverted s-curve that spends more time on the middle of the interpolation, this is best used if the ends do not have many changes, or if the middle is the most interesting part of the transition.
-  - More specifically, the equation used to remap the interpolation value is: $$\frac{1}{1+\left(\frac{x}{1-x}\right)^{-\text{exponent}}}$$
+  - More specifically, the equation used to remap the interpolation value is: $$\large\frac{1}{1+(\frac{x}{1-x})^{-\text{exponent}}}\normalsize$$
 - The "Use Step Interpolation?" checkbox changes the mode of how the interpolation is done:
   - Normally prompt values are blended based on their weights and frames, then that resulting blended prompt is applied over all diffusion steps, this usually works quite well and is the default.
   - In some cases, there is no satisfactory blend between two prompts, usually occurring when they are very different and of different types, in that case it may be better to use one prompt for some steps, and then use the second prompt for the rest. Checking the box will turn on this mode for the transition, though be aware that this often "skews" the timing of the transition, so the exponent may not have the same effect as before.
