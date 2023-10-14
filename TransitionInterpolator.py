@@ -46,7 +46,7 @@ def scurve(value, exponent):
     if value == 1:
         return 1
     xRatio = value/(1-value)
-    if xRatio == 0:
+    if xRatio <= 0:
         return 0
     return 1/(1+xRatio**(-exponent))
 
