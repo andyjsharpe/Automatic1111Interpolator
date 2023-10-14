@@ -70,7 +70,7 @@ class TransitionEditor:
         self.remove_transition_button = tk.Button(self.button_frame, text="Remove Interpolation", command=self.remove_transition, background=navyColor, foreground=whiteColor)
         self.remove_transition_button.pack(pady=10, padx=10, side="left")
 
-        self.framesLabel = ttk.Label(self.button_frame, text="Total Frames:", background=navyColor, foreground=whiteColor)
+        self.framesLabel = ttk.Label(self.button_frame, text="Last Frame:", background=navyColor, foreground=whiteColor)
         self.framesLabel.pack(pady=10, padx=10, side="left")
 
         valid1 = self.button_frame.register(validate_int_10k)
@@ -83,7 +83,7 @@ class TransitionEditor:
         self.constantsEntry = ttk.Entry(self.button_frame, width=50, background=greyColor, foreground=blackColor)
         self.constantsEntry.pack(side="left", padx=5)
 
-        self.negConstantsLabel = ttk.Label(self.button_frame, text="Constant negatives:", background=navyColor,
+        self.negConstantsLabel = ttk.Label(self.button_frame, text="Constant Negatives:", background=navyColor,
                                         foreground=whiteColor)
         self.negConstantsLabel.pack(pady=10, padx=10, side="left")
         self.negConstantsEntry = ttk.Entry(self.button_frame, width=20, background=greyColor, foreground=blackColor)
@@ -318,7 +318,7 @@ class Exponent:
         self.exponent_entry.pack(side="left", padx=5)
 
         self.interpolation = tk.BooleanVar(value=False)
-        self.interpolation_checkbox = tk.Checkbutton(self.exponent_frame, text="Use step interpolation?", background=greyColor, foreground=checkColor, variable=self.interpolation)
+        self.interpolation_checkbox = tk.Checkbutton(self.exponent_frame, text="Use Step Interpolation?", background=greyColor, foreground=checkColor, variable=self.interpolation)
         self.interpolation_checkbox.pack(side="left", padx=5)
 
 if __name__ == "__main__":
