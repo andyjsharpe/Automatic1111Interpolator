@@ -31,6 +31,8 @@ While the UI may be self-explanatory for those who have used software with keyfr
 The top bar of the UI contains important settings that effect the rest of the UI:
 - The "Add/Remove Interpolations" buttons add and remove interpolations
 - "Last Frame" decides the frame number at which to stop (the number of output images will be this value + 1 to include the zero frame).
+- The "Frame Multiplier" allows you to scale the frames in order to easily increase the number of output images without manually modifying all of the keyframe values. I suggest setting up your interpolations and keyframes to be in a small range of under 10 frames for quick testing, then increasing the images outputted by a large factor once you are happy with your prompts using the frame multiplier.
+- "True Last Frame" lists the actual last frame which takes the frame multiplier into account.
 - "Constants" is the positive prompt which diffusion applies to each image. You can use all normal Automatic 1111 prompt formatting. Note that you should not use this as a replacement of Automatic 1111's styles feature, as that has more flexibility, but rather an ease-of-use tool to avoid having to make an interpolation with only one keyframe to have constant values.
 - "Constant Negatives" is the same exact thing, but for negative prompts.
 - "Output File Name" is the name of the file which the script will create. The script will create the file in its parent folder.
@@ -48,6 +50,7 @@ Each "Keyframe: represents a prompt at a set point in time. The script interpola
 - The "Prompt" is the prompt at that keyframe. You can use all normal Automatic 1111 prompt formatting.
 - The "Weight" is a multiplier applied to the prompt.
 - The "Frame" is the time at which the keyframe occurs. The script chooses which prompts to blend and how much based on the distance of the current image’s frame to this value. This must be in-between the frames of the surrounding keyframes, or the script will produce strange outputs.
+- "True Frame" lists the actual frame which takes the frame multiplier into account.
 
 ### Transition:
 Between every pair of keyframes there will be a transition which the script uses to decide how it interpolates their prompts:

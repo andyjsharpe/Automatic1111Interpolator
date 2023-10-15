@@ -123,6 +123,24 @@ class TransitionEditor:
                                      textvariable=self.frames, validate="key", validatecommand=(valid1, '%P'))
         self.framesEntry.pack(padx=5, side="left")
 
+        self.frames.trace("w", self.updateFrameLabels)
+
+        self.multiplierLabel = ttk.Label(self.runFrame, text="Frame Multiplier:", background=navyColor,
+                                     foreground=whiteColor)
+        self.multiplierLabel.pack(padx=5, side="left")
+
+        validM = self.runFrame.register(validate_int_10k)
+        self.multiplier = tk.StringVar(value="1")
+        self.multiplierEntry = ttk.Entry(self.runFrame, width=6, background=greyColor, foreground=blackColor,
+                                     textvariable=self.multiplier, validate="key", validatecommand=(validM, '%P'))
+        self.multiplierEntry.pack(padx=5, side="left")
+
+        self.multiplier.trace("w", self.updateFrameLabels)
+
+        self.trueLastLabel = ttk.Label(self.runFrame, text="True Last Frame: 10", background=navyColor,
+                                       foreground=whiteColor)
+        self.trueLastLabel.pack(pady=10, padx=10, side="left")
+
         self.fileNameLabel = ttk.Label(self.runFrame, text="Output File Name:", background=navyColor,
                                        foreground=whiteColor)
         self.fileNameLabel.pack(pady=10, padx=10, side="left")
@@ -148,12 +166,36 @@ class TransitionEditor:
         self.runningLabel.pack(pady=5, padx=5, side="left")
 
         #This pre-opens up some of the UI
-        #blankFrame = BlankFrame(self.transition_frame, 0)
-        #self.blanks.append(blankFrame)
-        #self.add_transition()
+        blankFrame = BlankFrame(self.transition_frame, 0)
+        self.blanks.append(blankFrame)
+        self.add_transition()
+
+    def updateFrameLabels(self, *args):
+        mult = 0
+        try:
+            mult = int(self.multiplier.get())
+        except:
+            pass
+        mFrames = 0
+        try:
+            mFrames = int(self.frames.get())
+        except:
+            pass
+        tex="True Last Frame: {}".format(mult*mFrames)
+        self.trueLastLabel.config(text=tex)
+        for transition in self.transitions:
+            for keyframe in transition.keyframes:
+                fr = 0
+                try:
+                    fr = int(keyframe.time.get())
+                except:
+                    pass
+                tex2 = "True Frame: {}".format(mult*fr)
+                keyframe.trueFrameLabel.config(text=tex2)
 
     def updateScrollRegion(self, event):
         self.scrollCanvas.update_idletasks()
+        self.updateFrameLabels()
         self.scrollCanvas.configure(scrollregion=self.scrollCanvas.bbox("all"))
 
     def mouseScrollY(self, event):
@@ -167,7 +209,8 @@ class TransitionEditor:
         self.runningLabel.config(text="Running...", foreground=goldColor)
         try:
             #For each frame
-            for frame in range(int(self.frames.get()) + 1):
+            multiplier = int(self.multiplier.get())
+            for frame in range(int(self.frames.get())*multiplier + 1):
                 prompt = []
                 negPrompt = []
                 #For each transition
@@ -175,9 +218,9 @@ class TransitionEditor:
                     if len(transition.keyframes) < 1:
                         continue
                     startKeyframe = transition.keyframes[0]
-                    startDist = max(frame - int(startKeyframe.time_entry.get()), 0)
+                    startDist = max(frame - int(startKeyframe.time_entry.get())*multiplier, 0)
                     endKeyframe = transition.keyframes[-1]
-                    endDist = max(int(endKeyframe.time_entry.get()) - frame, 0)
+                    endDist = max(int(endKeyframe.time_entry.get())*multiplier - frame, 0)
                     exponent = transition.exponents[0]
                     if startDist < 0:
                         newPrompt = weightFormat.format(startKeyframe.prompt_entry.get(), startKeyframe.weight_entry.get())
@@ -195,7 +238,7 @@ class TransitionEditor:
                     # Loop through keyframes until closest one on each side is found
                     for i in range(len(transition.keyframes)):
                         keyframe = transition.keyframes[i]
-                        time = int(transition.keyframes[i].time_entry.get())
+                        time = int(transition.keyframes[i].time_entry.get())*multiplier
                         if time < frame:
                             if max(frame - time, 0) < startDist and keyframe != transition.keyframes[-1]:
                                 startKeyframe = keyframe
@@ -219,8 +262,7 @@ class TransitionEditor:
                                 endDist = max(frame - time, 0)
                                 if i < len(transition.exponents):
                                     exponent = transition.exponents[i]
-                    print(str(frame) + ": " + startKeyframe.prompt_entry.get() + "-" + endKeyframe.prompt_entry.get())
-                    interp = (frame - int(startKeyframe.time_entry.get())) / (int(endKeyframe.time_entry.get()) - int(startKeyframe.time_entry.get()))
+                    interp = (frame - int(startKeyframe.time_entry.get())*multiplier) / (int(endKeyframe.time_entry.get())*multiplier - int(startKeyframe.time_entry.get())*multiplier)
                     interp = scurve(interp, float(exponent.exponent.get()))
                     if interp >= 1:
                         interp = 0.999
@@ -242,6 +284,7 @@ class TransitionEditor:
                 finalPromps = ', '.join(prompt + [self.constantsEntry.get()])
                 finalNegPrompts = ', '.join(negPrompt + [self.negConstantsEntry.get()])
                 line = lineFormat.format(finalPromps, finalNegPrompts)
+                print(line)
                 f.write(line)
         except Exception as error:
             if self.debugging.get():
@@ -254,7 +297,7 @@ class TransitionEditor:
         self.runningLabel.config(text="Done!", foreground="green")
 
     def add_transition(self):
-        transition = Transition(self.transition_frame, len(self.transitions) + 1)
+        transition = Transition(self.transition_frame, len(self.transitions) + 1, self)
         transition.add_keyframe()
         transition.add_keyframe()
         blankFrame = BlankFrame(self.transition_frame, len(self.transitions) + 1)
@@ -279,8 +322,9 @@ class BlankFrame:
         self.blank_frame.grid(sticky="ew",row=num * 2 + 2, column=0)
 
 class Transition:
-    def __init__(self, parent_frame, num):
+    def __init__(self, parent_frame, num, transitionEditor):
         self.parent_frame = parent_frame
+        self.transitionEditor = transitionEditor
         self.keyframes = []
         self.exponents = []
 
@@ -315,7 +359,7 @@ class Transition:
         if keys > 0:
             exponent = Exponent(self.keyframes_frame, keys)
             self.exponents.append(exponent)
-        keyframe = Keyframe(self.keyframes_frame, keys+1)
+        keyframe = Keyframe(self.keyframes_frame, keys+1, self.transitionEditor)
         self.keyframes.append(keyframe)
     def remove_keyframe(self):
         keys = len(self.keyframes)
@@ -330,8 +374,9 @@ class Transition:
         keyframe.keyframe_frame.destroy()
 
 class Keyframe:
-    def __init__(self, parent_frame, num):
+    def __init__(self, parent_frame, num, transitionEditor):
         self.parent_frame = parent_frame
+        self.transitionEditor = transitionEditor
 
         self.keyframe_frame = tk.Frame(parent_frame, padx=4, pady=4, bg=greyColor)
         self.keyframe_frame.pack(fill="x")
@@ -341,7 +386,7 @@ class Keyframe:
 
         self.prompt_label = ttk.Label(self.keyframe_frame, text="Prompt:", background=navyColor, foreground=whiteColor)
         self.prompt_label.pack(side="left", padx=5)
-        self.prompt_entry = ttk.Entry(self.keyframe_frame, width=120, background=navyColor, foreground=blackColor)
+        self.prompt_entry = ttk.Entry(self.keyframe_frame, width=100, background=navyColor, foreground=blackColor)
         self.prompt_entry.pack(side="left", padx=5)
 
         self.weight = tk.StringVar(value="1")
@@ -357,6 +402,17 @@ class Keyframe:
         self.time_label.pack(side="left", padx=5)
         self.time_entry = ttk.Entry(self.keyframe_frame, width=5, background=navyColor, foreground=blackColor, validate="key", validatecommand=(valid2, '%P'),textvariable=self.time)
         self.time_entry.pack(side="left", padx=5)
+
+        self.time.trace("w", self.transitionEditor.updateFrameLabels)
+
+        result = 0
+        try:
+            result = int(transitionEditor.multiplier.get())
+        except:
+            pass
+        self.trueFrameLabel = ttk.Label(self.keyframe_frame, text="True Frame: {}".format(str((num - 1)*result)), background=navyColor,
+                                       foreground=whiteColor)
+        self.trueFrameLabel.pack(padx=10, side="left")
 
 class Exponent:
     def __init__(self, parent_frame, num):
