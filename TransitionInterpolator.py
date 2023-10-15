@@ -383,8 +383,9 @@ if __name__ == "__main__":
     root = tk.Tk()
     screen_width = root.winfo_screenwidth()
     screen_height = root.winfo_screenheight()
-    widthOffset = 0
-    heightOffset = 0
+    widthOffset = 120
+    heightOffset = 120
     root.geometry("{}x{}+{}+{}".format(screen_width - 2*widthOffset, screen_height - 80 - 2*heightOffset, widthOffset-10, heightOffset))
+    #root.state('zoomed')
     app = TransitionEditor(root)
     root.mainloop()
