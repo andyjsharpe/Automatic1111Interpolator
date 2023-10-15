@@ -37,7 +37,7 @@ The top bar of the UI contains important settings that effect the rest of the UI
 - "Constant Negatives" is the same exact thing, but for negative prompts.
 - "Output File Name" is the name of the file which the script will create. The script will create the file in its parent folder.
 - The "Create File" button is what you press to create the output file based on all your inputs. Once clicked the text next to it will say "Running...", and if it finished with no errors will say "Done!".
-- The "Debug?" checkbox makes it so any errors which arise during execution do not cause the program to fault (which would require a restart). Instead, the script shows the error next to the “Create File” button on screen. I highly recommend keeping this turned on unless you wish to make modifications to the code itself.
+- The "Debug?" checkbox makes it so any errors which arise during execution do not cause the program to fault (which would require a restart). Instead, the script shows the error next to the “Create File” button on screen. I highly recommend keeping this turned on unless you wish to make modifications to the code itself. The error messages which appear may not actually be that helpful, so when in doubt you should check if any input boxes are empty, as this is often the culprit.
 
 ### Interpolations:
 Each "Interpolation" represents a single changing feature. I recommend using a single interpolation for similar groups of ideas (for example: use one Interpolation for the camera angle and another for the setting).
