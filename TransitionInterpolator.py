@@ -98,7 +98,7 @@ class TransitionEditor:
 
         self.constantsLabel = ttk.Label(self.constantsFrame, text="Constants:", background=navyColor,foreground=whiteColor)
         self.constantsLabel.pack(pady=10, padx=10, side="left")
-        self.constantsEntry = ttk.Entry(self.constantsFrame, width=120, background=greyColor, foreground=blackColor)
+        self.constantsEntry = ttk.Entry(self.constantsFrame, width=160, background=greyColor, foreground=blackColor)
         self.constantsEntry.pack(padx=5, side="left")
 
         self.negConstantsFrame = tk.Frame(self.button_frame, bg=greyColor)
@@ -107,7 +107,7 @@ class TransitionEditor:
         self.negConstantsLabel = ttk.Label(self.negConstantsFrame, text="Constant Negatives:", background=navyColor,
                                         foreground=whiteColor)
         self.negConstantsLabel.pack(pady=10, padx=10, side="left")
-        self.negConstantsEntry = ttk.Entry(self.negConstantsFrame, width=120, background=greyColor, foreground=blackColor)
+        self.negConstantsEntry = ttk.Entry(self.negConstantsFrame, width=160, background=greyColor, foreground=blackColor)
         self.negConstantsEntry.pack(padx=5, side="left")
 
         self.runFrame = tk.Frame(self.button_frame, bg=greyColor)
@@ -138,8 +138,13 @@ class TransitionEditor:
                                     foreground=whiteColor)
         self.run_button.pack(pady=10, padx=10, side="left")
 
+        self.debugging = tk.BooleanVar(value=True)
+        self.debugging_checkbox = tk.Checkbutton(self.runFrame, text="Debug?", background=greyColor,
+                                                foreground=checkColor, variable=self.debugging)
+        self.debugging_checkbox.pack(pady=5, padx=5, side="left")
+
         self.runningLabel = ttk.Label(self.runFrame, text="Ready", background=navyColor,
-                                       foreground=goldColor)
+                                       foreground="green")
         self.runningLabel.pack(pady=5, padx=5, side="left")
 
         #This pre-opens up some of the UI
@@ -159,86 +164,94 @@ class TransitionEditor:
 
     def create_file(self):
         f = open(self.fileName.get(), "w+")
-        self.runningLabel.config(text="Running...")
-        #For each frame
-        for frame in range(int(self.frames.get()) + 1):
-            prompt = []
-            negPrompt = []
-            #For each transition
-            for transition in self.transitions:
-                if len(transition.keyframes) < 1:
-                    continue
-                startKeyframe = transition.keyframes[0]
-                startDist = max(frame - int(startKeyframe.time_entry.get()), 0)
-                endKeyframe = transition.keyframes[-1]
-                endDist = max(int(endKeyframe.time_entry.get()) - frame, 0)
-                exponent = transition.exponents[0]
-                if startDist < 0:
-                    newPrompt = weightFormat.format(startKeyframe.prompt_entry.get(), startKeyframe.weight_entry.get())
-                    if transition.negative.get():
-                        negPrompt.append(newPrompt)
+        self.runningLabel.config(text="Running...", foreground=goldColor)
+        try:
+            #For each frame
+            for frame in range(int(self.frames.get()) + 1):
+                prompt = []
+                negPrompt = []
+                #For each transition
+                for transition in self.transitions:
+                    if len(transition.keyframes) < 1:
+                        continue
+                    startKeyframe = transition.keyframes[0]
+                    startDist = max(frame - int(startKeyframe.time_entry.get()), 0)
+                    endKeyframe = transition.keyframes[-1]
+                    endDist = max(int(endKeyframe.time_entry.get()) - frame, 0)
+                    exponent = transition.exponents[0]
+                    if startDist < 0:
+                        newPrompt = weightFormat.format(startKeyframe.prompt_entry.get(), startKeyframe.weight_entry.get())
+                        if transition.negative.get():
+                            negPrompt.append(newPrompt)
+                        else:
+                            prompt.append(newPrompt)
+                        continue
+                    if endDist < 0:
+                        newPrompt = weightFormat.format(endKeyframe.prompt_entry.get(), endKeyframe.weight_entry.get())
+                        if transition.negative.get():
+                            negPrompt.append(newPrompt)
+                        else:
+                            prompt.append(newPrompt)
+                    # Loop through keyframes until closest one on each side is found
+                    for i in range(len(transition.keyframes)):
+                        keyframe = transition.keyframes[i]
+                        time = int(transition.keyframes[i].time_entry.get())
+                        if time < frame:
+                            if max(frame - time, 0) < startDist and keyframe != transition.keyframes[-1]:
+                                startKeyframe = keyframe
+                                startDist = max(frame - time, 0)
+                                if i < len(transition.exponents):
+                                    exponent = transition.exponents[i]
+                        elif time > frame:
+                            if max(time - frame, 0) < endDist and keyframe != transition.keyframes[0]:
+                                endKeyframe = keyframe
+                                endDist = max(time - frame, 0)
+                                if i < len(transition.exponents):
+                                    exponent = transition.exponents[i]
+                        elif time == frame:
+                            if endKeyframe != keyframe and max(frame - time, 0) < startDist and keyframe != transition.keyframes[-1]:
+                                startKeyframe = keyframe
+                                startDist = max(frame - time, 0)
+                                if i < len(transition.exponents):
+                                    exponent = transition.exponents[i]
+                            elif startKeyframe != keyframe and max(time - frame, 0) < endDist and keyframe != transition.keyframes[0]:
+                                endKeyframe = keyframe
+                                endDist = max(frame - time, 0)
+                                if i < len(transition.exponents):
+                                    exponent = transition.exponents[i]
+                    print(str(frame) + ": " + startKeyframe.prompt_entry.get() + "-" + endKeyframe.prompt_entry.get())
+                    interp = (frame - int(startKeyframe.time_entry.get())) / (int(endKeyframe.time_entry.get()) - int(startKeyframe.time_entry.get()))
+                    interp = scurve(interp, float(exponent.exponent.get()))
+                    if interp >= 1:
+                        interp = 0.999
+                    if interp <= 0:
+                        interp = 0.001
+                    interp = round(1-interp, 3)
+                    if exponent.interpolation.get():
+                        newPrompt = stepPromptFormat.format(startKeyframe.prompt_entry.get(), float(startKeyframe.weight_entry.get()), endKeyframe.prompt_entry.get(), float(endKeyframe.weight_entry.get()), interp)
+                        if transition.negative.get():
+                            negPrompt.append(newPrompt)
+                        else:
+                            prompt.append(newPrompt)
                     else:
-                        prompt.append(newPrompt)
-                    continue
-                if endDist < 0:
-                    newPrompt = weightFormat.format(endKeyframe.prompt_entry.get(), endKeyframe.weight_entry.get())
-                    if transition.negative.get():
-                        negPrompt.append(newPrompt)
-                    else:
-                        prompt.append(newPrompt)
-                # Loop through keyframes until closest one on each side is found
-                for i in range(len(transition.keyframes)):
-                    keyframe = transition.keyframes[i]
-                    time = int(transition.keyframes[i].time_entry.get())
-                    if time < frame:
-                        if max(frame - time, 0) < startDist and keyframe != transition.keyframes[-1]:
-                            startKeyframe = keyframe
-                            startDist = max(frame - time, 0)
-                            if i < len(transition.exponents):
-                                exponent = transition.exponents[i]
-                    elif time > frame:
-                        if max(time - frame, 0) < endDist and keyframe != transition.keyframes[0]:
-                            endKeyframe = keyframe
-                            endDist = max(time - frame, 0)
-                            if i < len(transition.exponents):
-                                exponent = transition.exponents[i]
-                    elif time == frame:
-                        if endKeyframe != keyframe and max(frame - time, 0) < startDist and keyframe != transition.keyframes[-1]:
-                            startKeyframe = keyframe
-                            startDist = max(frame - time, 0)
-                            if i < len(transition.exponents):
-                                exponent = transition.exponents[i]
-                        elif startKeyframe != keyframe and max(time - frame, 0) < endDist and keyframe != transition.keyframes[0]:
-                            endKeyframe = keyframe
-                            endDist = max(frame - time, 0)
-                            if i < len(transition.exponents):
-                                exponent = transition.exponents[i]
-                print(str(frame) + ": " + startKeyframe.prompt_entry.get() + "-" + endKeyframe.prompt_entry.get())
-                interp = (frame - int(startKeyframe.time_entry.get())) / (int(endKeyframe.time_entry.get()) - int(startKeyframe.time_entry.get()))
-                interp = scurve(interp, float(exponent.exponent.get()))
-                if interp >= 1:
-                    interp = 0.999
-                if interp <= 0:
-                    interp = 0.001
-                interp = round(1-interp, 3)
-                if exponent.interpolation.get():
-                    newPrompt = stepPromptFormat.format(startKeyframe.prompt_entry.get(), float(startKeyframe.weight_entry.get()), endKeyframe.prompt_entry.get(), float(endKeyframe.weight_entry.get()), interp)
-                    if transition.negative.get():
-                        negPrompt.append(newPrompt)
-                    else:
-                        prompt.append(newPrompt)
-                else:
-                    newPrompt = mixPromptFormat.format(startKeyframe.prompt_entry.get(), round(float(startKeyframe.weight_entry.get())*interp, 3), endKeyframe.prompt_entry.get(), round(float(endKeyframe.weight_entry.get())*(1 - interp),3))
-                    if transition.negative.get():
-                        negPrompt.append(newPrompt)
-                    else:
-                        prompt.append(newPrompt)
-            finalPromps = ', '.join(prompt + [self.constantsEntry.get()])
-            finalNegPrompts = ', '.join(negPrompt + [self.negConstantsEntry.get()])
-            line = lineFormat.format(finalPromps, finalNegPrompts)
-            f.write(line)
+                        newPrompt = mixPromptFormat.format(startKeyframe.prompt_entry.get(), round(float(startKeyframe.weight_entry.get())*interp, 3), endKeyframe.prompt_entry.get(), round(float(endKeyframe.weight_entry.get())*(1 - interp),3))
+                        if transition.negative.get():
+                            negPrompt.append(newPrompt)
+                        else:
+                            prompt.append(newPrompt)
+                finalPromps = ', '.join(prompt + [self.constantsEntry.get()])
+                finalNegPrompts = ', '.join(negPrompt + [self.negConstantsEntry.get()])
+                line = lineFormat.format(finalPromps, finalNegPrompts)
+                f.write(line)
+        except Exception as error:
+            if self.debugging.get():
+                self.runningLabel.config(text="ERROR!: {}".format(error), foreground="red")
+                f.close()
+                return
+            else:
+                raise error
         f.close()
-        self.runningLabel.config(text="Done!")
+        self.runningLabel.config(text="Done!", foreground="green")
 
     def add_transition(self):
         transition = Transition(self.transition_frame, len(self.transitions) + 1)

@@ -1,58 +1,60 @@
 # Automatic 1111 Interpolator
 
-This is a script intended to be used to interpolate between multiple prompts to create an image sequence using Automatic 1111. This script outputs a .txt file which Automatic 1111 can read using the "Prompts from file or textbox" script to create a sequence of images.
+This is a script which interpolates between multiple prompts to create an image sequence using Automatic 1111. This script outputs a .txt file which Automatic 1111 can read using the "Prompts from file or textbox" script to create a sequence of images.
 
-<img src=Example/frame0.png width="96"><img src=Example/frame1.png width="96"><img src=Example/frame2.png width="96"><img src=Example/frame3.png width="96"><img src=Example/frame4.png width="96"><img src=Example/frame5.png width="96"><img src=Example/frame6.png width="96">
+<img src=Example/frame0.png width="128"><img src=Example/frame1.png width="128"><img src=Example/frame2.png width="128"><img src=Example/frame3.png width="128"><img src=Example/frame4.png width="128"><img src=Example/frame5.png width="128"><img src=Example/frame6.png width="128">
 
-This script is purely designed to produce sets of positive and negative prompts. In this vein the Checkpoint, Step Count, Refiner, Styles, Sampling Method, and all other diffusion settings must be configured in the Automatic 1111 UI. This makes it so that an output can be easily reused with different Checkpoints and settings easily.
+This script produces sets of positive and negative prompts, but nothing else. Because of this you must configure the Checkpoint, Step Count, Refiner, Styles, Sampling Method, and all other diffusion settings in the Automatic 1111 UI. This makes it so that you can reuse the output with different Checkpoints and settings easily.
 
 An example of a output text file is here: [Example Output](Example/ExampleOutput.txt)
 
-If you wish to modify the code, it should be self-explanatory. Tkinter is used for the UI but everything else is just normal built-in Python.
+If you wish to modify the code, it should be self-explanatory. Tkinter is the only library used.
 
 I am not sure how much I plan to improve on this script, so feel free to fork this repo and make any modifications you want. If you have any feature requests or problems feel free to put them in the issues tab, though I cannot guarantee I will be able to get to them.
 
 ## Tips:
 - Manually setting a seed makes the transitions seem more natural, though it may also make images seem too similar from a composition perspective.
-- Try to only have a few terms in a single keyframe as blending will become unstable, if you are getting to 6 terms it is time to split some of them off into a separate interpolation.
+- Try to only have a few terms in a single keyframe as blending will become unstable, if you are getting to six terms it is time to split some of them off into a separate interpolation.
 - Super high weights often give strange results, if you are struggling to add a feature it is often more productive to either search for what is blocking it than to increase its weight.
-- On the frame which a keyframe occurs there may often be a "jump" in the continuity of the transition, a good way to fix this is to do your own blending inside the prompt with the format {value1 | value2}. The Use Step Interpolation option may also help here.
-- Some checkpoints are better at creating images with blended values, once you have the .txt file created be sure to try it with different checkpoints and settings.
-- Since diffusion tries to predict the average when creating an image, blending is affected both by likelihood and the other prompt values. For example, the sky is normally blue, so transitioning between a blue and green sky will likely only give green values when very close to the green sky keyframe.
+- On the frame which a keyframe occurs there may often be a "jump" in the continuity of the transition. For example, if you blend the colors red and blue the image often does not contain purple, as they are not similar enough. An effective way to fix this is to add in intermediary keyframe with the middle value. Building off that example, adding a keyframe in the middle with the term "purple" is likely to give better results.
+- If you are not getting satisfactory results try using a different checkpoint or diffusion settings, as you can reuse the .txt file this script creates.
+- Since the image created relies on the training data relating to that specific prompt, blends which do not often exist may have issues. For example, the sky is normally blue, so transitioning between a blue and green sky will only give green values when close to the green sky keyframe and will often give strange results when it does occur. You can solve this issue by using the weighting system, but sometimes a blend is simply not possible.
+- In a similar vein, since the script combines interpolations to make a single prompt, other terms can affect blending. For example, if you are blending between a baseball and volleyball, but the constant prompt is “at the beach” the volleyball is much more likely to show up in the output images as volleyballs are at the beach more often than baseballs. Again, you may be able to solve this issue using weights, but it is often easier to just use terms which lack interaction to avoid this issue altogether.
 
 ## UI Description and Guide:
-While the UI may be self-explanatory for those who have used any type of animation software, it may be a bit confusing at first. Each of the major sections of the UI and their interactable elements are described below:
+While the UI may be self-explanatory for those who have used software with keyframes before, for others it may be a bit confusing at first. Each of the major sections of the UI and their interactable elements are as follows:
 
 <img src=Example/ExampleInputs.png>
 
 ### Global Settings:
 The top bar of the UI contains important settings that effect the rest of the UI:
 - The "Add/Remove Interpolations" buttons add and remove interpolations
-- "Last Frame" decides the point at which new images will stop being made (the number of output images will be this value + 1 to handle the zero frame).
-- "Constants" is the positive prompt which is applied to each image. All normal Automatic 1111 prompt formatting can be used. Note that this is not intended to be a replacement of Automatic 1111's styles feature, as that generally gives better results, but rather an ease-of-use tool to avoid having to make an interpolation with only one keyframe to have constant values.
+- "Last Frame" decides the frame number at which to stop (the number of output images will be this value + 1 to include the zero frame).
+- "Constants" is the positive prompt which diffusion applies to each image. You can use all normal Automatic 1111 prompt formatting. Note that you should not use this as a replacement of Automatic 1111's styles feature, as that has more flexibility, but rather an ease-of-use tool to avoid having to make an interpolation with only one keyframe to have constant values.
 - "Constant Negatives" is the same exact thing, but for negative prompts.
-- "Output File Name" is the name of the file which will be output by the script. The file will be created in the folder containing the script.
+- "Output File Name" is the name of the file which the script will create. The script will create the file in its parent folder.
 - The "Create File" button is what you press to create the output file based on all your inputs. Once clicked the text next to it will say "Running...", and if it finished with no errors will say "Done!".
+- The "Debug?" checkbox makes it so any errors which arise during execution do not cause the program to fault (which would require a restart). Instead, the script shows the error next to the “Create File” button on screen. I highly recommend keeping this turned on unless you wish to make modifications to the code itself.
 
 ### Interpolations:
 Each "Interpolation" represents a single changing feature. I recommend using a single interpolation for similar groups of ideas (for example: use one Interpolation for the camera angle and another for the setting).
 - The "Negative?" checkbox puts the outputs of the interpolation in the negative prompt box instead of the positive prompt box.
-- Each Interpolation is comprised of multiple "Keyframes" and "Transitions" which define the values being interpolated, their frame locations, and how they are interpolated. Since blending keyframes with very different prompts can give unsatisfactory results, I recommend erring on the side of using more keyframes if you can.
+- Each Interpolation is comprised of multiple "Keyframes" and "Transitions" which define the values the script is interpolating between and how it interpolates them. Since blending keyframes with different prompts can give unsatisfactory results, I recommend erring on the side of using more keyframes if you can.
 - The "Add/Remove Keyframes" button adds and removes keyframes (and the transitions between them)
 
 ### Keyframes:
-Each "Keyframe: represents a prompt at a set point in time. Multiple keyframes will be interpolated within a single transition based on their frame to create the output.
-- The "Prompt" is the prompt at that keyframe. All normal Automatic 1111 prompt formatting can be used.
+Each "Keyframe: represents a prompt at a set point in time. The script interpolates multiple keyframes within a single transition based on their frame to create the output.
+- The "Prompt" is the prompt at that keyframe. You can use all normal Automatic 1111 prompt formatting.
 - The "Weight" is a multiplier applied to the prompt.
-- The "Frame" is the time at which the keyframe occurs. The amount that this keyframe's prompt is applied to any given image depends on the ratio between the image's frame and the distance to the nearest keyframe on either side. Make sure that this value is in between the frames of the surrounding keyframes, or unintended outputs may be produced.
+- The "Frame" is the time at which the keyframe occurs. The script chooses which prompts to blend and how much based on the distance of the current image’s frame to this value. This must be in-between the frames of the surrounding keyframes, or the script will produce strange outputs.
 
 ### Transition:
-Between every pair of keyframes there will be a transition which is used to decide how they are interpolated
+Between every pair of keyframes there will be a transition which the script uses to decide how it interpolates their prompts:
 - The "Exponent" decides the shape of the interpolation:
-  - 1 is Linear. This usually gives good results, but you may want to change it is the "interesting" parts of the transition are not being given enough frames in the output images.
-  - Values greater than 1 makes an s-curve that spends more time on the ends of the interpolation, this is best used if a lot of changes occur near the ends or if the middle of the transition is "boring".
-  - Values less than 1 makes an inverted s-curve that spends more time on the middle of the interpolation, this is best used if the ends do not have many changes, or if the middle is the most interesting part of the transition.
-  - More specifically, the equation used to remap the interpolation value is: $$\large\frac{1}{1+(\frac{x}{1-x})^{-\text{exponent}}}\normalsize$$
-- The "Use Step Interpolation?" checkbox changes the mode of how the interpolation is done:
-  - Normally prompt values are blended based on their weights and frames, then that resulting blended prompt is applied over all diffusion steps, this usually works quite well and is the default.
-  - In some cases, there is no satisfactory blend between two prompts, usually occurring when they are very different and of different types, in that case it may be better to use one prompt for some steps, and then use the second prompt for the rest. Checking the box will turn on this mode for the transition, though be aware that this often "skews" the timing of the transition, so the exponent may not have the same effect as before.
+  - 1 is Linear. This usually gives reliable results, but you may want to change it if the "interesting" parts of the transition do not appear in the output images.
+  - Values greater than 1 makes an s-curve that spends more time on the ends of the interpolation. You should use this if changes occur near the ends or if the middle of the transition is "boring".
+  - Values less than 1 makes an inverted s-curve that spends more time on the middle of the interpolation. You should use this if the ends do not have changes, or if the middle is the most interesting part of the transition.
+  - More specifically, the equation used to remap the interpolation value is: $$\frac{1}{1+\left(\frac{x}{1-x}\right)^{-\text{exponent}}}$$
+- The "Use Step Interpolation?" checkbox changes the method which the script used to interpolate the prompts:
+  - Normally the script blends prompt values based on their weights and frame values, then Automatic 1111 used the resulting blended prompt for all diffusion steps, this usually works quite well and is the default.
+  - Sometimes there is no satisfactory blend between two prompts, usually occurring when they are different and of distinct types, in that case it may be better to use one prompt for the first few steps, and then use the second prompt for the rest. Checking the box will turn on this mode for the transition, though be aware that this often "skews" the timing of the transition, so the exponent may not have the same effect as before.
