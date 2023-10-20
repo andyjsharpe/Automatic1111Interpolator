@@ -74,14 +74,23 @@ def scurve(value, exponent):
         return 0
     return 1/(1+xRatio**(-exponent))
 
+def BlankFrame(parent_frame):
+    return tk.Frame(parent_frame, height=2, bg=blackColor)
+
+def Label(parent_frame, text, bold):
+    if bold:
+        return ttk.Label(parent_frame, text=text, background=greyColor,
+              foreground=whiteColor, font="Verdana 8 bold")
+    else:
+        return ttk.Label(parent_frame, text=text, background=greyColor,
+                         foreground=whiteColor)
+
 class TransitionEditor:
     def __init__(self, root):
         self.root = root
         self.root.title("Transition Interpolator")
         self.transitions = []
-        self.blanks = []
         self.switchTransition = None
-        self.switchTransitionBlank = None
 
         self.scrollFrame = tk.Frame(root)
         self.scrollFrame.columnconfigure(index=0, weight=1)
@@ -118,8 +127,6 @@ class TransitionEditor:
 
         self.add_transition_button = tk.Button(self.transitionButtonsFrame, text="Add Interpolation", command=self.add_transition, background=navyColor, foreground=whiteColor)
         self.add_transition_button.pack(pady=10, padx=10, side="left")
-        self.remove_transition_button = tk.Button(self.transitionButtonsFrame, text="Remove Interpolation", command=self.remove_transition, background=navyColor, foreground=whiteColor)
-        self.remove_transition_button.pack(pady=10, padx=10, side="left")
 
         self.inputsFrame = tk.Frame(self.button_frame, bg=greyColor)
         self.inputsFrame.grid(row=1, column=0, sticky="W", padx=10)
@@ -127,7 +134,7 @@ class TransitionEditor:
         self.constantsFrame = tk.Frame(self.inputsFrame, bg=greyColor)
         self.constantsFrame.grid(row=0, column=0, sticky="E")
 
-        self.constantsLabel = ttk.Label(self.constantsFrame, text="Constants:", background=navyColor,foreground=whiteColor)
+        self.constantsLabel = Label(self.constantsFrame, "Constants:", False)
         self.constantsLabel.pack(pady=10, padx=10, side="left")
         self.constantsEntry = ttk.Entry(self.constantsFrame, width=120, background=greyColor, foreground=blackColor)
         self.constantsEntry.pack(padx=5, side="left")
@@ -135,8 +142,7 @@ class TransitionEditor:
         self.negConstantsFrame = tk.Frame(self.inputsFrame, bg=greyColor)
         self.negConstantsFrame.grid(row=1, column=0, sticky="E")
 
-        self.negConstantsLabel = ttk.Label(self.negConstantsFrame, text="Constant Negatives:", background=navyColor,
-                                        foreground=whiteColor)
+        self.negConstantsLabel = Label(self.negConstantsFrame, "Constant Negatives:", False)
         self.negConstantsLabel.pack(pady=10, padx=10, side="left")
         self.negConstantsEntry = ttk.Entry(self.negConstantsFrame, width=120, background=greyColor, foreground=blackColor)
         self.negConstantsEntry.pack(padx=5, side="left")
@@ -144,8 +150,7 @@ class TransitionEditor:
         self.runFrame = tk.Frame(self.button_frame, bg=greyColor)
         self.runFrame.grid(padx=10, row=0, column=0, sticky="WE", columnspan=2)
 
-        self.framesLabel = ttk.Label(self.runFrame, text="Last Frame:", background=navyColor,
-                                     foreground=whiteColor)
+        self.framesLabel = Label(self.runFrame, "Last Frame:", False)
         self.framesLabel.pack(padx=5, side="left")
 
         valid1 = self.runFrame.register(validate_int_10k)
@@ -156,8 +161,7 @@ class TransitionEditor:
 
         self.frames.trace("w", self.updateFrameLabels)
 
-        self.multiplierLabel = ttk.Label(self.runFrame, text="Frame Multiplier:", background=navyColor,
-                                     foreground=whiteColor)
+        self.multiplierLabel = Label(self.runFrame, "Frame Multiplier:", False)
         self.multiplierLabel.pack(padx=5, side="left")
 
         validM = self.runFrame.register(validate_int_10k)
@@ -168,12 +172,10 @@ class TransitionEditor:
 
         self.multiplier.trace("w", self.updateFrameLabels)
 
-        self.trueLastLabel = ttk.Label(self.runFrame, text="True Last Frame: 10", background=navyColor,
-                                       foreground=whiteColor)
+        self.trueLastLabel = Label(self.runFrame, "True Last Frame: 10:", False)
         self.trueLastLabel.pack(pady=10, padx=10, side="left")
 
-        self.fileNameLabel = ttk.Label(self.runFrame, text="Output File Name:", background=navyColor,
-                                       foreground=whiteColor)
+        self.fileNameLabel = Label(self.runFrame, "Output File Name:", False)
         self.fileNameLabel.pack(pady=10, padx=10, side="left")
 
         validTxt = self.runFrame.register(validate_end_txt)
@@ -196,27 +198,24 @@ class TransitionEditor:
                                        foreground="green")
         self.runningLabel.pack(pady=5, padx=5, side="left")
 
-        self.extrasFrame = tk.Frame(self.button_frame, bg=navyColor)
-        self.extrasFrame.grid(padx=10, row=1, column=1, sticky="NSEW", rowspan=2)
+        self.extrasFrame = tk.Frame(self.transitionButtonsFrame, bg=navyColor)
+        self.extrasFrame.pack(pady=5, padx=5, side="left")
 
-        self.extrasLabel = ttk.Label(self.extrasFrame, text="Extra Interpolations:", background=greyColor,
-                                       foreground=whiteColor, font="Verdana 8 bold")
+        self.extrasLabel = Label(self.extrasFrame, "Extra Interpolations:", True)
         self.extrasLabel.grid(pady=5, padx=5, row=0, column=0, sticky="W")
 
         self.useRefinerSwitch = tk.BooleanVar(value=False)
         self.useRefinerSwitchCheckBox = tk.Checkbutton(self.extrasFrame, text="Interpolate Refiner Switch Location?", background=greyColor,
                                                 foreground=checkColor, variable=self.useRefinerSwitch, command=self.switchTransitionCmd)
-        self.useRefinerSwitchCheckBox.grid(pady=5, padx=5, row=1, column=0, sticky="W")
+        self.useRefinerSwitchCheckBox.grid(pady=5, padx=5, row=0, column=1, sticky="W")
 
         self.useSeed = tk.BooleanVar(value=False)
         self.useSeedCheckbox = tk.Checkbutton(self.extrasFrame, text="Interpolate Seed?",
                                                background=greyColor,
                                                foreground=checkColor, variable=self.useSeed)
-        self.useSeedCheckbox.grid(pady=5, padx=5, row=2, column=0, sticky="W")
+        self.useSeedCheckbox.grid(pady=5, padx=5, row=0, column=2, sticky="W")
 
         #This pre-opens up some of the UI
-        blankFrame = BlankFrame(self.transition_frame, 0)
-        self.blanks.append(blankFrame)
         self.add_transition()
 
     def updateFrameLabels(self, *args):
@@ -355,25 +354,15 @@ class TransitionEditor:
         self.runningLabel.config(text="Done!", foreground="green")
 
     def add_transition(self):
-        num = len(self.transitions) + 1
+        num = 1
+        if len(self.transitions) > 0:
+            num = self.transitions[-1].num + 1
         if self.switchTransition is not None:
             num += 1
         transition = Transition(self.transition_frame, num, self)
         transition.add_keyframe()
         transition.add_keyframe()
-        blankFrame = BlankFrame(self.transition_frame, num)
         self.transitions.append(transition)
-        self.blanks.append(blankFrame)
-
-    def remove_transition(self):
-        if len(self.transitions) <= 0:
-            return
-        transition = self.transitions[-1]
-        self.transitions.remove(transition)
-        transition.transition_frame.destroy()
-        blankFrame = self.blanks[-1]
-        self.blanks.remove(blankFrame)
-        blankFrame.blank_frame.destroy()
 
     def switchTransitionCmd(self):
         if self.useRefinerSwitch.get():
@@ -382,59 +371,63 @@ class TransitionEditor:
             self.remove_switchTransition()
 
     def add_switchTransition(self):
-        transition = SwitchTransition(self.transition_frame, len(self.transitions) + 1, self)
+        if self.switchTransition is not None:
+            return
+        num = 1
+        if len(self.transitions) > 0:
+            num = self.transitions[-1].num + 1
+        transition = SwitchTransition(self.transition_frame, num, self)
         transition.add_keyframe()
         transition.add_keyframe()
-        blankFrame = BlankFrame(self.transition_frame, len(self.transitions) + 1)
         self.switchTransition = transition
-        self.switchTransitionBlank = blankFrame
 
     def remove_switchTransition(self):
         if self.switchTransition is None:
             return
         self.switchTransition.transition_frame.destroy()
         self.switchTransition = None
-        self.switchTransitionBlank.blank_frame.destroy()
-        self.switchTransition = None
-
-class BlankFrame:
-    def __init__(self, parent_frame, num):
-        self.parent_frame = parent_frame
-
-        self.blank_frame = tk.Frame(parent_frame, height=4, bg=blackColor)
-        self.blank_frame.grid(sticky="ew",row=num * 2 + 2, column=0)
 
 class Transition:
     def __init__(self, parent_frame, num, transitionEditor):
+        self.num = num
         self.parent_frame = parent_frame
         self.transitionEditor = transitionEditor
         self.keyframes = []
         self.exponents = []
 
-        self.transition_frame = tk.Frame(parent_frame, padx=8, pady=8, bg=navyColor)
+        print("start=" + str(num-1))
+
+        self.transition_frame = tk.Frame(parent_frame, padx=0, pady=0, bg=navyColor)
         self.transition_frame.grid(sticky="w",row=num * 2 + 1, column=0)
 
-        self.transition_buttons_frame = tk.Frame(self.transition_frame, padx=8, pady=8, bg=navyColor)
-        self.transition_buttons_frame.grid(row = 0, column=0, sticky="N")
+        self.blank = BlankFrame(self.transition_frame)
+        self.blank.grid(row=0, column=0, sticky="EW", columnspan=3)
 
-        self.transition_label = ttk.Label(self.transition_buttons_frame, text="Interpolation #" + str(num) + ": ", font="Verdana 8 bold", background=navyColor, foreground=whiteColor)
-        self.transition_label.grid(row=0, column=0, padx=5)
+        self.transition_buttons_frame = tk.Frame(self.transition_frame, padx=8, pady=8, bg=navyColor)
+        self.transition_buttons_frame.grid(row=1, column=0, sticky="N")
+
+        self.remove_transition_button = tk.Button(self.transition_buttons_frame, text="X",
+                                                  command=self.remove_transition, background=navyColor,
+                                                  foreground=whiteColor)
+        self.remove_transition_button.grid(row=0, column=0, padx=0, rowspan=3, sticky="WE")
+
+        self.transition_label = Label(self.transition_buttons_frame, "Interpolation #" + str(num) + ": ", True)
+        self.transition_label.grid(row=0, column=1, padx=5, pady=5)
 
         self.negative = tk.BooleanVar(value=False)
         self.negative_checkbox = tk.Checkbutton(self.transition_buttons_frame, text="Negative?", background=greyColor,
                                                 foreground=checkColor, variable=self.negative)
-        self.negative_checkbox.grid(row=1, column=0, padx=5)
+        self.negative_checkbox.grid(row=1, column=1, padx=5, pady=5)
 
         self.keyframes_frame = tk.Frame(self.transition_frame, padx=8, pady=8, bg=navyColor)
-        self.keyframes_frame.grid(row = 0, column=1, sticky="N")
+        self.keyframes_frame.grid(row=1, column=2, sticky="N")
 
         self.add_keyframe_button = tk.Button(self.transition_buttons_frame, text="Add Keyframe",
                                              command=self.add_keyframe, background=navyColor, foreground=whiteColor)
-        self.add_keyframe_button.grid(row=3, column=0, padx=5)
-        self.remove_keyframe_button = tk.Button(self.transition_buttons_frame, text="Remove Keyframe",
-                                                command=self.remove_keyframe, background=navyColor,
-                                                foreground=whiteColor)
-        self.remove_keyframe_button.grid(row=4, column=0, padx=5)
+        self.add_keyframe_button.grid(row=2, column=1, padx=5, pady=5)
+
+        self.blank2 = BlankFrame(self.transition_frame)
+        self.blank2.grid(row=4, column=0, sticky="EW", columnspan=3)
 
 
     def add_keyframe(self):
@@ -442,19 +435,12 @@ class Transition:
         if keys > 0:
             exponent = Exponent(self.keyframes_frame, keys)
             self.exponents.append(exponent)
-        keyframe = Keyframe(self.keyframes_frame, keys+1, self.transitionEditor)
+        keyframe = Keyframe(self.keyframes_frame, keys+1, self.transitionEditor, self)
         self.keyframes.append(keyframe)
-    def remove_keyframe(self):
-        keys = len(self.keyframes)
-        if keys <= 0:
-            return
-        if keys > 1:
-            exponent = self.exponents[-1]
-            self.exponents.remove(exponent)
-            exponent.exponent_frame.destroy()
-        keyframe = self.keyframes[-1]
-        self.keyframes.remove(keyframe)
-        keyframe.keyframe_frame.destroy()
+
+    def remove_transition(self):
+        self.transitionEditor.transitions.remove(self)
+        self.transition_frame.destroy()
 
 class SwitchTransition:
     def __init__(self, parent_frame, num, transitionEditor):
@@ -469,67 +455,52 @@ class SwitchTransition:
         self.transition_buttons_frame = tk.Frame(self.transition_frame, padx=8, pady=8, bg=navyColor)
         self.transition_buttons_frame.grid(row = 0, column=0, sticky="N")
 
-        self.transition_label = ttk.Label(self.transition_buttons_frame, text="Refiner Switch Interpolation: ", font="Verdana 8 bold", background=navyColor, foreground=whiteColor)
-        self.transition_label.grid(row=0, column=0, padx=5)
+        self.transition_label = Label(self.transition_buttons_frame, "Refiner Switch Interpolation: ", True)
+        self.transition_label.grid(row=0, column=0, padx=5, pady=5)
 
         self.keyframes_frame = tk.Frame(self.transition_frame, padx=8, pady=8, bg=navyColor)
         self.keyframes_frame.grid(row=0, column=1, sticky="N")
 
         self.add_keyframe_button = tk.Button(self.transition_buttons_frame, text="Add Keyframe",
                                              command=self.add_keyframe, background=navyColor, foreground=whiteColor)
-        self.add_keyframe_button.grid(row=3, column=0, padx=5)
-        self.remove_keyframe_button = tk.Button(self.transition_buttons_frame, text="Remove Keyframe",
-                                                command=self.remove_keyframe, background=navyColor,
-                                                foreground=whiteColor)
-        self.remove_keyframe_button.grid(row=4, column=0, padx=5)
-
+        self.add_keyframe_button.grid(row=3, column=0, padx=5, pady=5)
 
     def add_keyframe(self):
         keys = len(self.keyframes)
         if keys > 0:
             exponent = NoStepExponent(self.keyframes_frame, keys)
             self.exponents.append(exponent)
-        keyframe = SwitchKeyframe(self.keyframes_frame, keys+1, self.transitionEditor)
+        keyframe = SwitchKeyframe(self.keyframes_frame, keys+1, self.transitionEditor, self)
         self.keyframes.append(keyframe)
-    def remove_keyframe(self):
-        keys = len(self.keyframes)
-        if keys <= 0:
-            return
-        if keys > 1:
-            exponent = self.exponents[-1]
-            self.exponents.remove(exponent)
-            exponent.exponent_frame.destroy()
-        keyframe = self.keyframes[-1]
-        self.keyframes.remove(keyframe)
-        keyframe.keyframe_frame.destroy()
-
 
 class Keyframe:
-    def __init__(self, parent_frame, num, transitionEditor):
+    def __init__(self, parent_frame, num, transitionEditor, transition):
+        self.num = num
         self.parent_frame = parent_frame
+        self.transition = transition
         self.transitionEditor = transitionEditor
 
         self.keyframe_frame = tk.Frame(parent_frame, padx=4, pady=4, bg=greyColor)
         self.keyframe_frame.pack(fill="x")
 
-        self.keyframe_label = ttk.Label(self.keyframe_frame, text="Keyframe #" + str(num) + ": ", font="Verdana 8 bold", background=navyColor, foreground=whiteColor)
+        self.keyframe_label = Label(self.keyframe_frame, "Keyframe #" + str(num) + ": ", True)
         self.keyframe_label.pack(side="left", padx=5)
 
-        self.prompt_label = ttk.Label(self.keyframe_frame, text="Prompt:", background=navyColor, foreground=whiteColor)
+        self.prompt_label = Label(self.keyframe_frame, "Prompt", False)
         self.prompt_label.pack(side="left", padx=5)
         self.prompt_entry = ttk.Entry(self.keyframe_frame, width=100, background=navyColor, foreground=blackColor)
         self.prompt_entry.pack(side="left", padx=5)
 
         self.weight = tk.StringVar(value="1")
         valid1 = self.keyframe_frame.register(validate_float_1000)
-        self.weight_label = ttk.Label(self.keyframe_frame, text="Weight:", background=navyColor, foreground=whiteColor)
+        self.weight_label = Label(self.keyframe_frame, "Weight", False)
         self.weight_label.pack(side="left", padx=5)
         self.weight_entry = ttk.Entry(self.keyframe_frame, width=5, background=navyColor, foreground=blackColor, validate="key", validatecommand=(valid1, '%P'), textvariable=self.weight)
         self.weight_entry.pack(side="left", padx=5)
 
         self.time = tk.StringVar(value=str(num - 1))
         valid2 = self.keyframe_frame.register(validate_float_1000)
-        self.time_label = ttk.Label(self.keyframe_frame, text="Frame:", background=navyColor, foreground=whiteColor)
+        self.time_label = Label(self.keyframe_frame, "Frame", False)
         self.time_label.pack(side="left", padx=5)
         self.time_entry = ttk.Entry(self.keyframe_frame, width=5, background=navyColor, foreground=blackColor, validate="key", validatecommand=(valid2, '%P'),textvariable=self.time)
         self.time_entry.pack(side="left", padx=5)
@@ -541,31 +512,51 @@ class Keyframe:
             result = int(transitionEditor.multiplier.get())
         except:
             pass
-        self.trueFrameLabel = ttk.Label(self.keyframe_frame, text="True Frame: {}".format(str((num - 1)*result)), background=navyColor,
-                                       foreground=whiteColor)
+        self.trueFrameLabel = Label(self.keyframe_frame,"True Frame: {}".format(str((num - 1)*result)), False)
         self.trueFrameLabel.pack(padx=10, side="left")
 
+        self.remove_keyframe_button = tk.Button(self.keyframe_frame, text="X",
+                                                  command=self.remove_keyframe, background=navyColor,
+                                                  foreground=whiteColor)
+        self.remove_keyframe_button.pack(padx=5, side="left")
+
+    def remove_keyframe(self):
+        #removing should remove this keyframe and the exponent after if it exists
+        index = self.transition.keyframes.index(self)
+        length = len(self.transition.keyframes)
+        if index < length - 1:
+            exponent = self.transition.exponents[index]
+            self.transition.exponents.remove(exponent)
+            exponent.exponent_frame.destroy()
+        elif index == length - 1 and length > 1:
+            exponent = self.transition.exponents[index - 1]
+            self.transition.exponents.remove(exponent)
+            exponent.exponent_frame.destroy()
+        self.transition.keyframes.remove(self)
+        self.keyframe_frame.destroy()
+
 class SwitchKeyframe:
-    def __init__(self, parent_frame, num, transitionEditor):
+    def __init__(self, parent_frame, num, transitionEditor, transition):
         self.parent_frame = parent_frame
+        self.transition = transition
         self.transitionEditor = transitionEditor
 
         self.keyframe_frame = tk.Frame(parent_frame, padx=4, pady=4, bg=greyColor)
         self.keyframe_frame.pack(fill="x")
 
-        self.keyframe_label = ttk.Label(self.keyframe_frame, text="Keyframe #" + str(num) + ": ", font="Verdana 8 bold", background=navyColor, foreground=whiteColor)
+        self.keyframe_label = Label(self.keyframe_frame,"Keyframe #" + str(num) + ": ", True)
         self.keyframe_label.pack(side="left", padx=5)
 
-        self.switchValue = tk.StringVar(value="1")
+        self.switchValue = tk.StringVar(value="0.5")
         valid1 = self.keyframe_frame.register(validate_float_1)
-        self.switch_label = ttk.Label(self.keyframe_frame, text="Switch At:", background=navyColor, foreground=whiteColor)
+        self.switch_label = Label(self.keyframe_frame,"Switch At: ", False)
         self.switch_label.pack(side="left", padx=5)
         self.switch_entry = ttk.Entry(self.keyframe_frame, width=5, background=navyColor, foreground=blackColor, validate="key", validatecommand=(valid1, '%P'), textvariable=self.switchValue)
         self.switch_entry.pack(side="left", padx=5)
 
         self.time = tk.StringVar(value=str(num - 1))
         valid2 = self.keyframe_frame.register(validate_float_1000)
-        self.time_label = ttk.Label(self.keyframe_frame, text="Frame:", background=navyColor, foreground=whiteColor)
+        self.time_label = Label(self.keyframe_frame,"Frame:", False)
         self.time_label.pack(side="left", padx=5)
         self.time_entry = ttk.Entry(self.keyframe_frame, width=5, background=navyColor, foreground=blackColor, validate="key", validatecommand=(valid2, '%P'),textvariable=self.time)
         self.time_entry.pack(side="left", padx=5)
@@ -577,9 +568,28 @@ class SwitchKeyframe:
             result = int(transitionEditor.multiplier.get())
         except:
             pass
-        self.trueFrameLabel = ttk.Label(self.keyframe_frame, text="True Frame: {}".format(str((num - 1)*result)), background=navyColor,
-                                       foreground=whiteColor)
+        self.trueFrameLabel = Label(self.keyframe_frame,"True Frame: {}".format(str((num - 1)*result)), False)
         self.trueFrameLabel.pack(padx=10, side="left")
+
+        self.remove_keyframe_button = tk.Button(self.keyframe_frame, text="X",
+                                                command=self.remove_keyframe, background=navyColor,
+                                                foreground=whiteColor)
+        self.remove_keyframe_button.pack(padx=5, side="left")
+
+    def remove_keyframe(self):
+        #removing should remove this keyframe and the exponent after if it exists
+        index = self.transition.keyframes.index(self)
+        length = len(self.transition.keyframes)
+        if index < length - 1:
+            exponent = self.transition.exponents[index]
+            self.transition.exponents.remove(exponent)
+            exponent.exponent_frame.destroy()
+        elif index == length - 1 and length > 1:
+            exponent = self.transition.exponents[index - 1]
+            self.transition.exponents.remove(exponent)
+            exponent.exponent_frame.destroy()
+        self.transition.keyframes.remove(self)
+        self.keyframe_frame.destroy()
 
 class Exponent:
     def __init__(self, parent_frame, num):
@@ -588,11 +598,11 @@ class Exponent:
         self.exponent_frame = tk.Frame(parent_frame, padx=2, pady=2, bg=navyColor)
         self.exponent_frame.pack(fill="x")
 
-        self.exponent_label = ttk.Label(self.exponent_frame, text="\tTransition #" + str(num) + ": ", font="Verdana 8 bold", background=navyColor, foreground=whiteColor)
+        self.exponent_label = Label(self.exponent_frame,"\tTransition #" + str(num) + ": ", True)
         self.exponent_label.pack(side="left", padx=5)
 
         valid1 = self.exponent_frame.register(validate_float_1000)
-        self.exponent_label = ttk.Label(self.exponent_frame, text="Exponent:", background=navyColor, foreground=whiteColor)
+        self.exponent_label = Label(self.exponent_frame,"Exponent:", False)
         self.exponent_label.pack(side="left", padx=5)
         self.exponent = tk.StringVar(value="1")
         self.exponent_entry = ttk.Entry(self.exponent_frame, width=6, background=greyColor, foreground=blackColor, validate="key", validatecommand=(valid1, '%P'), textvariable=self.exponent)
@@ -610,11 +620,11 @@ class NoStepExponent:
         self.exponent_frame = tk.Frame(parent_frame, padx=2, pady=2, bg=navyColor)
         self.exponent_frame.pack(fill="x")
 
-        self.exponent_label = ttk.Label(self.exponent_frame, text="\tTransition #" + str(num) + ": ", font="Verdana 8 bold", background=navyColor, foreground=whiteColor)
+        self.exponent_label = Label(self.exponent_frame,"\tTransition #" + str(num) + ": ", True)
         self.exponent_label.pack(side="left", padx=5)
 
         valid1 = self.exponent_frame.register(validate_float_1000)
-        self.exponent_label = ttk.Label(self.exponent_frame, text="Exponent:", background=navyColor, foreground=whiteColor)
+        self.exponent_label = Label(self.exponent_frame,"Exponent:", False)
         self.exponent_label.pack(side="left", padx=5)
         self.exponent = tk.StringVar(value="1")
         self.exponent_entry = ttk.Entry(self.exponent_frame, width=6, background=greyColor, foreground=blackColor, validate="key", validatecommand=(valid1, '%P'), textvariable=self.exponent)
