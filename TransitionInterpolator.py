@@ -90,7 +90,7 @@ def label(parent_frame, text, bold):
         return ttk.Label(parent_frame, text=text, background=greyColor,
                          foreground=whiteColor, font="Verdana 8 bold")
     else:
-        return ttk.Label(parent_frame, text=text, background=greyColor,
+        return ttk.Label(parent_frame, text=text, background=navyColor,
                          foreground=whiteColor)
 
 
@@ -286,7 +286,11 @@ class TransitionEditor:
                 prompt, neg_prompt = self.get_transition_prompts(frame, multiplier)
 
                 final_prompts = ', '.join(prompt + [self.constantsEntry.get()])
+                if final_prompts == "":
+                    final_prompts = ', '
                 final_neg_prompts = ', '.join(neg_prompt + [self.negConstantsEntry.get()])
+                if final_neg_prompts == "":
+                    final_neg_prompts = ', '
                 line = lineFormat.format(final_prompts, final_neg_prompts)
 
                 if self.useRefinerSwitch.get():
@@ -359,11 +363,13 @@ class TransitionEditor:
 
         override_keyframe, interp, start_keyframe, end_keyframe = self.get_interp_value(transition, frame, multiplier)
 
-        if override_keyframe != None:
+        if override_keyframe is not None:
             try:
-                return float(override_keyframe.switchValue.get())
+                return round(float(override_keyframe.switchValue.get()), 2)
             except:
                 return None
+
+        round(interp, 2)
 
         if interp > 1:
             interp = 1
@@ -379,14 +385,13 @@ class TransitionEditor:
         except:
             end_val = 0
 
-        interp = round(interp, 3)
-        return start_val + (end_val - start_val) * interp
+        return round(start_val + (end_val - start_val) * interp, 2)
 
     def get_interp_value(self, transition, frame, multiplier):
         start_keyframe = transition.keyframes[0]
-        start_dist = max(frame - int(start_keyframe.time_entry.get()) * multiplier, 0)
+        start_dist = frame - int(start_keyframe.time_entry.get()) * multiplier
         end_keyframe = transition.keyframes[-1]
-        end_dist = max(int(end_keyframe.time_entry.get()) * multiplier - frame, 0)
+        end_dist = int(end_keyframe.time_entry.get()) * multiplier - frame
         exponent = transition.exponents[0]
 
         if start_dist < 0:

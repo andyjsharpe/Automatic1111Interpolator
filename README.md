@@ -29,31 +29,33 @@ While the UI may be self-explanatory for those who have used software with keyfr
 
 ### Global Settings:
 The top bar of the UI contains important settings that effect the rest of the UI:
-- The "Add/Remove Interpolations" buttons add and remove interpolations
 - "Last Frame" decides the frame number at which to stop (the number of output images will be this value + 1 to include the zero frame).
-- The "Frame Multiplier" allows you to scale the frames in order to easily increase the number of output images without manually modifying all of the keyframe values. I suggest setting up your interpolations and keyframes to be in a small range of under 10 frames for quick testing, then increasing the images outputted by a large factor once you are happy with your prompts using the frame multiplier.
+- The "Frame Multiplier" allows you to scale the frames to easily increase the number of output images without manually modifying all the keyframe values. I suggest setting up your interpolations and keyframes to be in a small range of under 10 frames for quick testing, then increasing the images output by a large factor once you are happy with your prompts using the frame multiplier.
 - "True Last Frame" lists the actual last frame which takes the frame multiplier into account.
-- "Constants" is the positive prompt which diffusion applies to each image. You can use all normal Automatic 1111 prompt formatting. Note that you should not use this as a replacement of Automatic 1111's styles feature, as that has more flexibility, but rather an ease-of-use tool to avoid having to make an interpolation with only one keyframe to have constant values.
-- "Constant Negatives" is the same exact thing, but for negative prompts.
 - "Output File Name" is the name of the file which the script will create. The script will create the file in its parent folder.
 - The "Create File" button is what you press to create the output file based on all your inputs. Once clicked the text next to it will say "Running...", and if it finished with no errors will say "Done!".
 - The "Debug?" checkbox makes it so any errors which arise during execution do not cause the program to fault (which would require a restart). Instead, the script shows the error next to the “Create File” button on screen. I highly recommend keeping this turned on unless you wish to make modifications to the code itself. The error messages which appear may not actually be that helpful, so when in doubt you should check if any input boxes are empty, as this is often the culprit.
+- "Constants" is the positive prompt which diffusion applies to each image. You can use all normal Automatic 1111 prompt formatting. Note that you should not use this as a replacement of Automatic 1111's styles feature, as that has more flexibility, but rather an ease-of-use tool to avoid having to make an interpolation with only one keyframe to have constant values.
+- "Constant Negatives" is the same exact thing, but for negative prompts.
+- The "Add Interpolations" button adds a new interpolation
 
 ### Interpolations:
-Each "Interpolation" represents a single changing feature. I recommend using a single interpolation for similar groups of ideas (for example: use one Interpolation for the camera angle and another for the setting).
+Each "Interpolation" represents a single changing feature. I recommend using a single interpolation for similar groups of ideas (for example: use one Interpolation for the camera angle and another for the setting):
+- The "X" button deletes that interpolation.
 - The "Negative?" checkbox puts the outputs of the interpolation in the negative prompt box instead of the positive prompt box.
 - Each Interpolation is comprised of multiple "Keyframes" and "Transitions" which define the values the script is interpolating between and how it interpolates them. Since blending keyframes with different prompts can give unsatisfactory results, I recommend erring on the side of using more keyframes if you can.
-- The "Add/Remove Keyframes" button adds and removes keyframes (and the transitions between them)
+- The "Add Keyframe" button adds a keyframe (and the transitions between them)
 
 ### Keyframes:
-Each "Keyframe: represents a prompt at a set point in time. The script interpolates multiple keyframes within a single transition based on their frame to create the output.
+Each "Keyframe" represents a prompt at a set point in time. The script interpolates multiple keyframes within a single transition based on their frame to create the output:
 - The "Prompt" is the prompt at that keyframe. You can use all normal Automatic 1111 prompt formatting.
 - The "Weight" is a multiplier applied to the prompt.
 - The "Frame" is the time at which the keyframe occurs. The script chooses which prompts to blend and how much based on the distance of the current image’s frame to this value. This must be in-between the frames of the surrounding keyframes, or the script will produce strange outputs.
 - "True Frame" lists the actual frame which takes the frame multiplier into account.
+- The "X" button deletes that keyframe and the transition between it and the next keyframe if applicable (in the case it is the final keyframe, the prior transition is deleted)
 
 ### Transition:
-Between every pair of keyframes there will be a transition which the script uses to decide how it interpolates their prompts:
+Between every pair of keyframes there will be a "Transition" which the script uses to decide how it interpolates their prompts:
 - The "Exponent" decides the shape of the interpolation:
   - 1 is Linear. This usually gives reliable results, but you may want to change it if the "interesting" parts of the transition do not appear in the output images.
   - Values greater than 1 makes an s-curve that spends more time on the ends of the interpolation. You should use this if changes occur near the ends or if the middle of the transition is "boring".
@@ -62,3 +64,14 @@ Between every pair of keyframes there will be a transition which the script uses
 - The "Use Step Interpolation?" checkbox changes the method which the script used to interpolate the prompts:
   - Normally the script blends prompt values based on their weights and frame values, then Automatic 1111 used the resulting blended prompt for all diffusion steps, this usually works quite well and is the default.
   - Sometimes there is no satisfactory blend between two prompts, usually occurring when they are different and of distinct types, in that case it may be better to use one prompt for the first few steps, and then use the second prompt for the rest. Checking the box will turn on this mode for the transition, though be aware that this often "skews" the timing of the transition, so the exponent may not have the same effect as before.
+
+### Extra Interpolations:
+This section is in the Global Settings section, and allows you to interpolate non-prompt values in Automatic 1111:
+- Though their UI is different from the other interpolations, all shared UI works identically.
+- To add or remove these extra interpolations check or uncheck their respective checkboxes.
+- "Interpolate Refiner Switch Location?" will create a unique interpolation box which allows you to interpolate the amount the primary and refiner checkpoints are used on each frame
+  - For this to work, you must edit the `prompts_from_file.py` file within Automatic 1111 and add `"refiner_switch_at": process_float_tag` to the `prompt_tags` dictionary.
+  - In general, that checkpoint which you want to define the overall composition should be your primary checkpoint, with the checkpoint which you want to define the details of your image should be the refiner.
+  - The "Switch At" value defines when the refiner checkpoint should start being used, so a value of 0 means it will be used the entire time, and a value of 1 means it will never be used.
+  - Note that setting the refiner switch to values near 0.5 often gives strange results, so images generated in that range might give strange results.
+
