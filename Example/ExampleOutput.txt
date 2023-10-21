@@ -1,7 +1,7 @@
---prompt {(morning:0.999) | (noon:0.001)}, {(oak tree:0.999) | (bush:0.001)}, desert --negative_prompt {(dunes:0.499) | (blue sky:0.001)}, grass --refiner_switch_at 0.0
---prompt {(morning:0.704) | (noon:0.296)}, {(oak tree:0.667) | (bush:0.333)}, desert --negative_prompt {(dunes:0.345) | (blue sky:0.309)}, grass --refiner_switch_at 0.17
---prompt {(morning:0.296) | (noon:0.704)}, {(oak tree:0.333) | (bush:0.667)}, desert --negative_prompt {(dunes:0.293) | (blue sky:0.414)}, grass --refiner_switch_at 0.33
---prompt {(noon:0.999) | (night:0.001)}, {(oak tree:0.001) | (bush:0.999)}, desert --negative_prompt {(dunes:0.25) | (blue sky:0.5)}, grass --refiner_switch_at 0.5
---prompt {(noon:0.704) | (night:0.296)}, (bush):1, desert --negative_prompt {(dunes:0.207) | (blue sky:0.586)}, grass --refiner_switch_at 0.67
---prompt {(noon:0.296) | (night:0.704)}, (bush):1, desert --negative_prompt {(dunes:0.154) | (blue sky:0.691)}, grass --refiner_switch_at 0.83
---prompt {(noon:0.001) | (night:0.999)}, (bush):1, desert --negative_prompt {(dunes:0.001) | (blue sky:0.999)}, grass --refiner_switch_at 1.0
+--prompt [((morning):1.0) : ((noon):1.0) : 0.999], {(oak tree:0.999) | (bush:0.001)}, desert --negative_prompt {(dunes:0.499) | (blue sky:0.002)}, grass
+--prompt [((morning):1.0) : ((noon):1.0) : 0.704], {(oak tree:0.833) | (bush:0.167)}, desert --negative_prompt {(dunes:0.345) | (blue sky:0.618)}, grass
+--prompt [((morning):1.0) : ((noon):1.0) : 0.296], {(oak tree:0.667) | (bush:0.333)}, desert --negative_prompt {(dunes:0.293) | (blue sky:0.828)}, grass
+--prompt [((noon):1.0) : ((night):1.0) : 0.999], {(oak tree:0.5) | (bush:0.5)}, desert --negative_prompt {(dunes:0.25) | (blue sky:1.0)}, grass
+--prompt [((noon):1.0) : ((night):1.0) : 0.704], {(oak tree:0.333) | (bush:0.667)}, desert --negative_prompt {(dunes:0.207) | (blue sky:1.172)}, grass
+--prompt [((noon):1.0) : ((night):1.0) : 0.296], {(oak tree:0.167) | (bush:0.833)}, desert --negative_prompt {(dunes:0.154) | (blue sky:1.382)}, grass
+--prompt [((noon):1.0) : ((night):1.0) : 0.001], {(oak tree:0.001) | (bush:0.999)}, desert --negative_prompt {(dunes:0.001) | (blue sky:1.998)}, grass
